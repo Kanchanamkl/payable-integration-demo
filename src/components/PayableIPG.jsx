@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, User, MapPin, Package, AlertCircle } from 'lucide-react';
-
+import SHA512 from 'crypto-js/sha512';
+import { enc } from 'crypto-js';
 const PayableIPGIntegration = () => {
   const [formData, setFormData] = useState({
     // Payment Details
@@ -104,9 +105,18 @@ const PayableIPGIntegration = () => {
 
   // Generate checkValue (this should be done on your backend for security)
   const generateCheckValue = (merchantKey, invoiceId, amount, currencyCode, merchantToken) => {
-    // Note: This is a placeholder. In production, this should be generated on your backend
     // Format: UPPERCASE(SHA512[<merchantKey>|<invoiceId>|<amount>|<currencyCode>|UPPERCASE(SHA512[<merchantToken>])])
-    return 'PLACEHOLDER_CHECK_VALUE'; // Replace with actual implementation
+    
+    // First calculate the inner hash: UPPERCASE(SHA512[<merchantToken>])
+    const innerHash = SHA512(merchantToken).toString(enc.Hex).toUpperCase();
+    
+    // Then build the string with pipe separator
+    const concatenatedString = `${merchantKey}|${invoiceId}|${amount}|${currencyCode}|${innerHash}`;
+    
+    // Calculate the final hash and convert to uppercase
+    const finalHash = SHA512(concatenatedString).toString(enc.Hex).toUpperCase();
+    
+    return finalHash;
   };
 
   const validateForm = () => {
